@@ -1,5 +1,9 @@
+"""
+Client Module
+Author: Jordi van Deerse
+"""
 import socket
-import sys
+# import sys
 import subprocess
 import time
 

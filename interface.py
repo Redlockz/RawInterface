@@ -1,3 +1,7 @@
+"""
+Connection Class Module
+Author: Jordi van Deerse
+"""
 import socket
 # import sys
 import subprocess
