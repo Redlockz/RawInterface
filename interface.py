@@ -35,7 +35,7 @@ class Connection:
     def welcome(self):
         """Welcome Function"""
 
-        self.logger.info("> User has been authorized")
+        self.logger.info("User has been authorized")
 
         self.conn.sendall(b'Welcome to my server, the next options are available:\r\n')
         self.conn.sendall(b'\t <login>: Login as a user using Username/Password authentication\r\n')
@@ -194,7 +194,7 @@ class Connection:
     def close(self):
         """Close connection"""
 
-        self.logger.info('> Closing connection with'+ self.addr[0] + ':' + str(self.addr[1]))
+        self.logger.info('Closing connection with'+ self.addr[0] + ':' + str(self.addr[1]))
         self.conn.close()
         self.s.close()
 
