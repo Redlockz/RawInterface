@@ -23,7 +23,10 @@ class Connection:
     def welcome(self):
         """Welcome Function"""
         # De server meldt zich aan de client
-        self.conn.sendall(b'WelkomOpMijnServer, vertel me iets, dan zeg ik hetzelfde terug:\r\n')
+        self.conn.sendall(b'Welkom Op Mijn Server, de volgende opties zijn beschikbaar:\r\n')
+        self.conn.sendall(b'\t <login>: Login als een gebruiker middels Username/Password\r\n')
+        self.conn.sendall(b'\t <close>: Sluit de connectie met de server\r\n')
+        self.conn.sendall(b'\t <dir>: Voert het commando dir uit op de server\r\n')
 
     def open(self):
         """Open socket and listen to incoming connections"""
@@ -35,7 +38,6 @@ class Connection:
         self.conn, addr = self.s.accept()
         # Er is een client verbonden met de server
         print('> Verbonden met ' + addr[0] + ':' + str(addr[1]))
-        self.welcome()
         self.login()
 
     def send(self, data):
@@ -97,19 +99,27 @@ class Connection:
         with open("config/sec.conf", "r") as f:
             print(f"> Received { username }, { password }")
             lines = f.readlines()
+            user_list = []
+            passwd_list = []
             for line in lines:
                 jsonobject = json.loads(line)
-                print(jsonobject)
-                user_list = [jsonobject["Username"]]
-                passwd_list = [jsonobject["Password"]]
-                if username in user_list and password in passwd_list:
-                    self.conn.sendall(b'Login success\r\n')
-                    time.sleep(1)
-                    self.receive()
-                else:
-                    self.conn.sendall(b'Login failed, closing connection\r\n')
-                    time.sleep(5)
-                    self.close()
+                user_list.append([jsonobject["Username"]])
+                passwd_list.append([jsonobject["Password"]])
+                users = sum(user_list, [])
+                passwords = sum(passwd_list, [])
+            if username in users:
+                print("found user")
+            if password in passwords:
+                print("found password")
+            if username in users and password in passwords:
+                self.conn.sendall(b'Login success\r\n')
+                self.welcome()
+                time.sleep(1)
+                self.receive()
+            else:
+                self.conn.sendall(b'Login failed, closing connection\r\n')
+                time.sleep(5)
+                self.close()
 
 
 
