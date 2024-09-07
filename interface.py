@@ -14,6 +14,7 @@ class Connection:
 
     def __init__(self):
         """Initialize vars and prompt open function"""
+
         self.host = ''
         self.port = 8888
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -22,59 +23,68 @@ class Connection:
 
     def welcome(self):
         """Welcome Function"""
-        # De server meldt zich aan de client
-        self.conn.sendall(b'Welkom Op Mijn Server, de volgende opties zijn beschikbaar:\r\n')
-        self.conn.sendall(b'\t <login>: Login als een gebruiker middels Username/Password\r\n')
-        self.conn.sendall(b'\t <close>: Sluit de connectie met de server\r\n')
-        self.conn.sendall(b'\t <dir>: Voert het commando dir uit op de server\r\n')
+
+        self.conn.sendall(b'Welcome to my server, the next options are available:\r\n')
+        self.conn.sendall(b'\t <login>: Login as a user using Username/Password authentication\r\n')
+        self.conn.sendall(b'\t <CMD>: Go to the option to execute a command and receive return value\r\n')
+        self.conn.sendall(b'\t <close>: Closes the connection to the server server\r\n')
 
     def open(self):
         """Open socket and listen to incoming connections"""
+
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # avoid TIME_WAIT error
         self.s.bind((self.host, self.port))
         self.s.listen(10)
         print('> Socket luistert op poort:',self.port)
         # Wacht op self.connecties (blocking)
-        self.conn, addr = self.s.accept()
+        self.conn, self.addr = self.s.accept()
         # Er is een client verbonden met de server
-        print('> Verbonden met ' + addr[0] + ':' + str(addr[1]))
+        print('> Verbonden met ' + self.addr[0] + ':' + str(self.addr[1]))
         self.login()
 
     def send(self, data):
         "Send data back to receiver"
-        unicodeData = data.encode()
+
         self.conn.sendall(b'\r\n')
         self.conn.sendall(b''+data.encode())
         self.conn.sendall(b'\r\n')
         self.receive()
 
-    def proces(self, data):
+    def proces(self):
         "Process commands on stdin"
-        print('> Client data ontvangen: '+data+' <eindeData>')
-        output = subprocess.run(f"{data}", shell=True, capture_output=True, check=True)
+
+        executionorder = False
+        self.conn.sendall(b'Please enter the command you want to execute: \r\n')
+
+        # Wait for user input
+        while not executionorder:
+            executionorderbytes = self.conn.recv(1024)
+            executionorder = str(executionorderbytes.decode('ascii')).rstrip()
+        print('> Received client data <begin>: '+executionorder+' <end>')
+        output = subprocess.run(f"{executionorder}", shell=True, capture_output=True, check=True)
         stdout = output
-        text = f"Executed command: {data} on remote system. Got {stdout}"
+        text = f"Executed command: {executionorder} on remote system. Got {stdout}"
 
         self.send(text)
 
     def receive(self):
-        "Receive data from client after listening for connection"
-        # Wacht op input van de client en geef deze ook weer terug (echo service)
+        "Receive data from client"
+
         self.conn.sendall(b'Waiting for input...\r\n')
         data = False
         while not data:
             data = self.conn.recv(1024)
-            data=str(data.decode('ascii')).rstrip() # # Remove \r | \n | \r\n
+            data=str(data.decode('ascii')).rstrip()
         self.action(data)
 
     def action(self, data):
-        """Preform action with input"""
+        """Preform action with input from receive function"""
 
         match data:
             case "close":
                 return self.close()
-            case "dir":
-                return self.proces(data)
+            case "CMD":
+                return self.proces()
             case "login":
                 return self.login()
             case _:
@@ -82,9 +92,11 @@ class Connection:
 
     def login(self):
         """Determines if access is granted, otherwise close socket"""
+
         username = False
         self.conn.sendall(b'Please enter your username: \r\n')
 
+        # Wait for user input
         while not username:
             usernamebytes = self.conn.recv(1024)
             username = str(usernamebytes.decode('ascii')).rstrip()
@@ -92,41 +104,53 @@ class Connection:
         password = False
         self.conn.sendall(b'Please enter your password: \r\n')
 
+        # Wait for user input
         while not password:
             passwordbytes = self.conn.recv(1024)
             password = str(passwordbytes.decode('ascii')).rstrip()
 
+        # Open user file
         with open("config/sec.conf", "r") as f:
             print(f"> Received { username }, { password }")
             lines = f.readlines()
             user_list = []
             passwd_list = []
             for line in lines:
+
                 jsonobject = json.loads(line)
-                user_list.append([jsonobject["Username"]])
-                passwd_list.append([jsonobject["Password"]])
-                users = sum(user_list, [])
-                passwords = sum(passwd_list, [])
+
+                # Load user dict for specific user
+                if username == jsonobject["Username"]:
+                    user_list.append([jsonobject["Username"]])
+                    passwd_list.append([jsonobject["Password"]])
+                    users = sum(user_list, [])
+                    passwords = sum(passwd_list, [])
+
+            # logging
             if username in users:
                 print("found user")
             if password in passwords:
                 print("found password")
+
+            # Determine success of authentication
             if username in users and password in passwords:
+                print("Login success, listening for user input...")
                 self.conn.sendall(b'Login success\r\n')
                 self.welcome()
                 time.sleep(1)
                 self.receive()
+                # TODO: Return Token
+                # TODO: Create decorator to validate token
             else:
                 self.conn.sendall(b'Login failed, closing connection\r\n')
-                time.sleep(10) # Punish user for incorrect login by keeping connection open for longer time
+                # Punish user for incorrect login by keeping connection open for longer time
+                time.sleep(10)
                 self.close()
-
-
 
     def close(self):
         """Close connection"""
-        # Verbreek de verbinding en sluit de socket
 
+        print('> \t Closing connection with'+ self.addr[0] + ':' + str(self.addr[1]))
         self.conn.close()
         self.s.close()
 
