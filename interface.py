@@ -118,7 +118,7 @@ class Connection:
                 self.receive()
             else:
                 self.conn.sendall(b'Login failed, closing connection\r\n')
-                time.sleep(5)
+                time.sleep(10) # Punish user for incorrect login by keeping connection open for longer time
                 self.close()
 
 
