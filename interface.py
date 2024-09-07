@@ -50,7 +50,7 @@ class Connection:
         self.conn.sendall(b'\r\n')
         self.receive()
 
-    def proces(self, data):
+    def proces(self):
         "Process commands on stdin"
 
         executionorder = False
@@ -84,7 +84,7 @@ class Connection:
             case "close":
                 return self.close()
             case "CMD":
-                return self.proces(data)
+                return self.proces()
             case "login":
                 return self.login()
             case _:
@@ -143,7 +143,8 @@ class Connection:
                 # TODO: Create decorator to validate token
             else:
                 self.conn.sendall(b'Login failed, closing connection\r\n')
-                time.sleep(10) # Punish user for incorrect login by keeping connection open for longer time
+                # Punish user for incorrect login by keeping connection open for longer time
+                time.sleep(10)
                 self.close()
 
     def close(self):
