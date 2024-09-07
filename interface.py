@@ -13,6 +13,7 @@ print("Starting program")
 
 class Connection:
     """Connection Class"""
+    # pylint: disable=logging-fstring-interpolation logging-not-lazy
 
     def __init__(self):
         """Initialize vars and prompt open function"""
