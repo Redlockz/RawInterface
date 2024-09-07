@@ -45,7 +45,6 @@ class Connection:
     def send(self, data):
         "Send data back to receiver"
 
-        unicodeData = data.encode()
         self.conn.sendall(b'\r\n')
         self.conn.sendall(b''+data.encode())
         self.conn.sendall(b'\r\n')
