@@ -12,14 +12,8 @@ PORT = 8888
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # avoid TIME_WAIT error
-# s.bind((HOST, PORT))
 s.connect((HOST, PORT))
 
-
-# conn, addr = s.accept()
-message = "hello"
-print(f"sending {message} to ")
 s.sendall(b'hee \r\n')
 
 # time.sleep(5)
