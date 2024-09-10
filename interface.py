@@ -53,9 +53,11 @@ class Connection:
             self.s.bind((self.host, self.port))
             self.s.listen(10)
             self.logger.info(f'Socket listening on port: {self.port}')
-        except exception as e:
+        except Exception as e:
             self.logger.debug(f"Could not open {self.host}:{self.port}.")
             self.logger.debug(f"{e}")
+            time.sleep(1)
+            self.close()
         # Wacht op self.connecties (blocking)
         self.conn, self.addr = self.s.accept()
         # Er is een client verbonden met de server
@@ -69,8 +71,10 @@ class Connection:
         try:
             self.conn.sendall(b''+data.encode())
             self.logger.info(f"send {data} to {self.addr[0],self.addr[1]}")
-        except exception as e:
+        except Exception as e:
             self.logger.debug(f"Could not parse {data}")
+            time.sleep(1)
+            self.close()
         self.conn.sendall(b'\r\n')
         self.receive()
 
@@ -90,14 +94,15 @@ class Connection:
         self.logger.info('Received client data <begin>: '+executionorder+' <end>')
         try:
             output = subprocess.run(f"{executionorder}", shell=True, capture_output=True, check=True)
-            stdout = output
+            stdout = output.stdout.decode()
             text = f"Executed command: {executionorder} on remote system. Got {stdout}"
             self.logger.info(f"{text}")
-        except exception as e:
+            self.send(stdout)
+        except Exception as e:
             self.logger.debug(f"Could not process command {executionorder}")
             self.logger.debug(f"{e}")
-
-        self.send(text)
+            time.sleep(1)
+            self.close()
 
     def receive(self):
         "Receive data from client"
@@ -167,9 +172,10 @@ class Connection:
                         passwd_list.append([jsonobject["Password"]])
                         users = sum(user_list, [])
                         passwords = sum(passwd_list, [])
-        except exception as e:
+        except Exception as e:
             self.logger.debug(f"Could not parse request for {username, password}")
             self.logger.debug(f"{e}")
+            time.sleep(1)
 
         # logging
         if username in users:
