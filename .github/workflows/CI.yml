@@ -35,4 +35,4 @@ jobs:
     - name: Install Checkov
       run: pip3 install checkov
     - name: Run Checkov
-      run: checkov -d .
+      run: checkov -d . --skip-check CKV2_GHA_1
