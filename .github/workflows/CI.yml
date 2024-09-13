@@ -32,13 +32,9 @@ jobs:
     - name: Analysing the code with pylint
       run: |
         pylint --fail-under=8.5 $(git ls-files '*.py')
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.8
     - name: Test with Checkov
       id: checkov
       uses: bridgecrewio/checkov-action@master
       with:
-      directory: .
-      framework: python 
+        directory: .
+        framework: python 
