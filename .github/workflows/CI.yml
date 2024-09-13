@@ -37,4 +37,4 @@ jobs:
       uses: bridgecrewio/checkov-action@master
       with:
         directory: .
-        framework: python 
+        framework: sast_python 
