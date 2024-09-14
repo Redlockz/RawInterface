@@ -16,6 +16,8 @@ jobs:
     name: Python-CI
     runs-on: ubuntu-latest
 
+    # Run job twice for both python versions
+
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
@@ -25,14 +27,23 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
+
+    # Install and run Checkov
+    - name: Install Checkov for CI Validation
+      run: |
+        pip3 install checkov
+
+    - name: Validating CI
+      run: |
+        checkov -d . --skip-check CKV2_GHA_1
+
+    # Install Python dependencies
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install pylint
-    - name: Analysing the code with pylint
+
+    # Run Pylint
+    - name: Linting Python Code
       run: |
         pylint --fail-under=8.5 $(git ls-files '*.py')
-    - name: Install Checkov
-      run: pip3 install checkov
-    - name: Run Checkov
-      run: checkov -d . --skip-check CKV2_GHA_1
