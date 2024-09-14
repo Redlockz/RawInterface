@@ -50,4 +50,5 @@ jobs:
 
     - name: SAST_Python
       run: |
+        checkov --help
         checkov -d . --framework sast_python --skip-check CKV2_GHA_1
