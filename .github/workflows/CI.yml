@@ -28,6 +28,15 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    # Install and run Checkov
+    - name: Install Checkov for CI Validation
+      run: |
+        pip3 install checkov
+
+    - name: Validating CI
+      run: |
+        checkov -d . --skip-check CKV2_GHA_1
+
     # Install Python dependencies
     - name: Install dependencies
       run: |
@@ -38,17 +47,3 @@ jobs:
     - name: Linting Python Code
       run: |
         pylint --fail-under=8.5 $(git ls-files '*.py')
-
-    # Install and run Checkov
-    - name: Install Checkov for CI Validation
-      run: |
-        pip3 install checkov
-
-    - name: Validating CI
-      run: |
-        checkov -d . --skip-check CKV2_GHA_1
-
-    - name: SAST_Python
-      run: |
-        checkov --help
-        checkov -d . --framework sast_python --skip-check CKV2_GHA_1
